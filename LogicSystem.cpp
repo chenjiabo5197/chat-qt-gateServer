@@ -1,5 +1,6 @@
 #include "LogicSystem.h"
 #include "HttpConnection.h"
+#include "VerifyGrpcClient.h"
 
 bool LogicSystem::HandleGet(std::string path, std::shared_ptr<HttpConnection> conn)
 {
@@ -76,8 +77,11 @@ LogicSystem::LogicSystem()
 			return true;
 		}
 		auto email = src_root["email"].asString();
+		// 获取验证码服务器返回的response
+		GetVerifyRsp rsp = VerifyGrpcClient::GetInstance()->GetVerifyCode(email);
 		std::cout << "email=" << email << std::endl;
-		root["error"] = 0;
+		// 获取返回值的error可以直接用error()，这是grpc封装的借口
+		root["error"] = rsp.error();
 		root["email"] = src_root["email"];
 		std::string jsonStr = root.toStyledString();
 		beast::ostream(connection->_response.body()) << jsonStr;
