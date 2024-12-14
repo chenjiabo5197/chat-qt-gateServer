@@ -5,6 +5,7 @@
 class HttpConnection: public std::enable_shared_from_this<HttpConnection>
 {
 public:
+	friend class LogicSystem;
 	HttpConnection(tcp::socket socket);
 	void Start();
 private:
@@ -13,7 +14,7 @@ private:
 	// 应答函数
 	void WriteResponse();
 	// 处理请求
-	void handleReq();
+	void HandleReq();
 
 	tcp::socket _socket;
 	// 接收数据缓冲区
@@ -26,5 +27,10 @@ private:
 	net::steady_timer deadline_{
 		_socket.get_executor(), std::chrono::seconds(60)
 	};
+	std::string _get_url;
+	// 储存get请求的url中带的参数，储存为map
+	std::unordered_map<std::string, std::string> _get_params;
+	// 解析get请求中的参数
+	void PreParseGetParam();
 };
 

@@ -1,4 +1,5 @@
 #include "CServer.h"
+#include "HttpConnection.h"
 
 // _ioc为引用类型，在类的构造函数初始化列表中对_ioc进行初始化。这是因为引用一旦定义就必须被初始化，且之后不能再改变其引用的对象
 CServer::CServer(boost::asio::io_context& ioc, unsigned short& port): _ioc(ioc), _acceptor(ioc, tcp::endpoint(tcp::v4(), port)), _socket(ioc)
@@ -22,7 +23,7 @@ void CServer::Start()
 			}
 			// 创建新链接，并创建HttpConnection类管理这个连接
 			// 使用std::move将_socket转换为右值引用,因为_socket没有拷贝构造函数
-			std::make_shared<HttpConnection>(std::move(_socket))->Start();
+			std::make_shared<HttpConnection>(std::move(self->_socket))->Start();
 
 			// 继续监听其他连接
 			self->Start();

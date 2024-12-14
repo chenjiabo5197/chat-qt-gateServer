@@ -2,17 +2,35 @@
 #include <json/json.h>
 #include <json/value.h>
 #include <json/reader.h>
+#include "CServer.h"
 
 int main()
 {
-    Json::Value root;
-    root["id"] = 1001;
-    root["data"] = "hello world";
-    std::string request = root.toStyledString();
-    std::cout << "request is " << request << std::endl;
-
-    Json::Value root2;
-    Json::Reader reader;
-    reader.parse(request, root2);
-    std::cout << "msg id is " << root2["id"] << " msg is " << root2["data"] << std::endl;
+    try
+    {
+        unsigned short port = static_cast<unsigned short> (8080);
+        // 底层一个线程
+        net::io_context ioc{ 1 };
+        // 声明一个信号集，捕获SIGINT和SIGTERM
+        boost::asio::signal_set signals(ioc, SIGINT, SIGTERM);
+        // 信号集异步等待
+        signals.async_wait([&ioc](const boost::system::error_code& error, int signal_number) {
+            if (error)
+            {
+                return;
+            }
+            // 收到停止信号好，停止ioc
+            ioc.stop();
+        });
+        // 启动server
+        std::make_shared<CServer>(ioc, port)->Start();
+        std::cout << "Gate Server listen on port=" << port << std::endl;
+        // 让ioc轮询起来
+        ioc.run();
+    }
+    catch (std::exception const& e)
+    {
+        std::cout << "Error=" << e.what() << std::endl;
+        return EXIT_FAILURE;
+    }
 }
