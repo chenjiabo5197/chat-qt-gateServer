@@ -20,6 +20,7 @@ struct SectionInfo
 			return *this;
 		}
 		this->_section_data = src._section_data;
+		return *this;
 	};
 
 	std::map<std::string, std::string> _section_data;
@@ -51,9 +52,14 @@ public:
 			return SectionInfo();
 		}
 		return _config_map[section];
-	}
+	};
 
-	ConfigMgr();
+	static ConfigMgr& Inst()
+	{
+		// 局部静态变量，声明周期与进程同步，保证线程安全，多线程访问可以确保返回一份
+		static ConfigMgr cfg_mgr;
+		return cfg_mgr;
+	};
 
 	ConfigMgr(const ConfigMgr& src)
 	{
@@ -71,6 +77,7 @@ public:
 	};
 
 private:
+	ConfigMgr();
 	std::map<std::string, SectionInfo> _config_map;
 };
 

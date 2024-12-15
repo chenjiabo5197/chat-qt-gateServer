@@ -14,7 +14,7 @@ private:
 	tcp::acceptor _acceptor;
 	// 上下文 所有异步操作的核心
 	net::io_context& _ioc;
-	// 复用socket，接收对端的连接信息
-	tcp::socket _socket;
+	//// 复用socket，接收对端的连接信息
+	//tcp::socket _socket;
 };
 
