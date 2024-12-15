@@ -1,6 +1,8 @@
 # Prerequisites
 *.d
 .vs/*
+chat-qt-.1fe7d8a2/*
+x64/*
 
 # Compiled Object files
 *.slo
