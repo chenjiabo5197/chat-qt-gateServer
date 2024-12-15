@@ -37,7 +37,7 @@ private:
 	VerifyGrpcClient()
 	{
 		// 第一个参数表示服务器的地址，第二个参数用于传递创建通道时需要的各种配置选项，grpc::InsecureChannelCredentials()用于创建一个不安全的通道凭据
-		std::shared_ptr<Channel> channel = grpc::CreateChannel("0.0.0.0:50051", grpc::InsecureChannelCredentials());
+		std::shared_ptr<Channel> channel = grpc::CreateChannel("127.0.0.1:50051", grpc::InsecureChannelCredentials());
 		// stub必须通过channel通信
 		stub_ = VerifyService::NewStub(channel);
 	}

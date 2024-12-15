@@ -24,7 +24,7 @@ int main()
             {
                 return;
             }
-            // 收到停止信号好，停止ioc
+            // 收到停止信号后，停止ioc
             ioc.stop();
         });
         // 启动server
