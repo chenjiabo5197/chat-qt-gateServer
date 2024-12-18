@@ -56,7 +56,7 @@ public:
 				// 继续往下走，且加锁
 				return true;
 			}
-			// 线程会阻塞并等待条件变量的通知
+			// return false时，线程会阻塞并等待条件变量的通知
 			return !connections_.empty();
 		});
 		if (b_stop_)
