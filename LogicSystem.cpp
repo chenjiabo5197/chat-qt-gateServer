@@ -1,6 +1,7 @@
 #include "LogicSystem.h"
 #include "HttpConnection.h"
 #include "VerifyGrpcClient.h"
+#include "RedisMgr.h"
 
 bool LogicSystem::HandleGet(std::string path, std::shared_ptr<HttpConnection> conn)
 {
@@ -47,6 +48,7 @@ LogicSystem::LogicSystem()
 		}
 	});
 
+	// 获取验证码请求
 	RegPost("/get_verifycode", [](std::shared_ptr<HttpConnection> connection) {
 		// 获取post请求体
 		auto body_str = boost::beast::buffers_to_string(connection->_request.body().data());
@@ -67,6 +69,7 @@ LogicSystem::LogicSystem()
 			// 不能返回false，返回false是断开连接
 			return true;
 		}
+
 		// 判断请求体中是否有email这个key值
 		if (!src_root.isMember("email"))
 		{
@@ -85,6 +88,70 @@ LogicSystem::LogicSystem()
 		root["email"] = src_root["email"];
 		std::string jsonStr = root.toStyledString();
 		beast::ostream(connection->_response.body()) << jsonStr;
+		return true;
+	});
+
+	// 用户注册请求
+	RegPost("/user_register", [](std::shared_ptr<HttpConnection> connection) {
+		auto body_str = boost::beast::buffers_to_string(connection->_request.body().data());
+		std::cout << "receive body is " << body_str << std::endl;
+		connection->_response.set(http::field::content_type, "text/json");
+		Json::Value root;
+		Json::Reader reader;
+		Json::Value src_root;
+		bool parse_success = reader.parse(body_str, src_root);
+		if (!parse_success) {
+			std::cout << "Failed to parse JSON data!" << std::endl;
+			root["error"] = ErrorCodes::Error_Json;
+			std::string jsonstr = root.toStyledString();
+			beast::ostream(connection->_response.body()) << jsonstr;
+			return true;
+		}
+
+		auto email = src_root["email"].asString();
+		auto name = src_root["name"].asString();
+		auto passwd = src_root["passwd"].asString();
+		auto confirm = src_root["confirm"].asString();
+		// 判断密码和确认密码是否一致
+		if (std::strcmp(passwd.c_str(), confirm.c_str()))
+		{
+			std::cout << "confirm error" << std::endl;
+			root["error"] = ErrorCodes::PasswdErr;
+			std::string jsonstr = root.toStyledString();
+			beast::ostream(connection->_response.body()) << jsonstr;
+			return true;
+		}
+
+		// 查找redis中email对应的验证码是否过期
+		std::string varify_code;
+		bool b_get_varify = RedisMgr::GetInstance()->Get(CODEPREFIX + src_root["email"].asString(), varify_code);
+		if (!b_get_varify) {
+			std::cout << " get varify code expired" << std::endl;
+			root["error"] = ErrorCodes::VerifyExpired;
+			std::string jsonstr = root.toStyledString();
+			beast::ostream(connection->_response.body()) << jsonstr;
+			return true;
+		}
+
+		// 对比redis中的验证码与请求的验证码是否一致
+		if (varify_code != src_root["varifycode"].asString()) {
+			std::cout << " varify code error" << std::endl;
+			root["error"] = ErrorCodes::VerifyCodeErr;
+			std::string jsonstr = root.toStyledString();
+			beast::ostream(connection->_response.body()) << jsonstr;
+			return true;
+		}
+
+		//查找数据库判断用户是否存在
+
+		root["error"] = 0;
+		root["email"] = email;
+		root["user"] = name;
+		root["passwd"] = passwd;
+		root["confirm"] = confirm;
+		root["varifycode"] = src_root["varifycode"].asString();
+		std::string jsonstr = root.toStyledString();
+		beast::ostream(connection->_response.body()) << jsonstr;
 		return true;
 	});
 }
