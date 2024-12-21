@@ -42,6 +42,21 @@ enum ErrorCodes
 	PasswdInvalid = 1009,	// 密码无效
 };
 
+class Defer {
+public:
+	// 接受一个lambda表达式或函数指针
+	Defer(std::function<void()> func): func_(func){}
+
+	// 析构函数中执行传入的函数
+	~Defer()
+	{
+		func_();
+	}
+
+private:
+	std::function<void()> func_;
+};
+
 #define CODEPREFIX "code_"
 
 // 采用单例后此处不需要了，直接调用ConfigMgr::Inst()

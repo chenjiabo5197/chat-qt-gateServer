@@ -2,6 +2,7 @@
 #include "HttpConnection.h"
 #include "VerifyGrpcClient.h"
 #include "RedisMgr.h"
+#include "MysqlMgr.h"
 
 bool LogicSystem::HandleGet(std::string path, std::shared_ptr<HttpConnection> conn)
 {
@@ -109,7 +110,7 @@ LogicSystem::LogicSystem()
 		}
 
 		auto email = src_root["email"].asString();
-		auto name = src_root["name"].asString();
+		auto name = src_root["user"].asString();
 		auto passwd = src_root["passwd"].asString();
 		auto confirm = src_root["confirm"].asString();
 		// 判断密码和确认密码是否一致
@@ -143,10 +144,20 @@ LogicSystem::LogicSystem()
 		}
 
 		//查找数据库判断用户是否存在
+		int uid = MysqlMgr::GetInstance()->RegUser(name, email, passwd, "");
+		if (uid == 0 || uid == -1)
+		{
+			std::cout << "user or email exist" << std::endl;
+			root["error"] = ErrorCodes::UserExist;
+			std::string jsonstr = root.toStyledString();
+			beast::ostream(connection->_response.body()) << jsonstr;
+			return true;
+		}
 
 		root["error"] = 0;
 		root["email"] = email;
 		root["user"] = name;
+		root["uid"] = uid;
 		root["passwd"] = passwd;
 		root["confirm"] = confirm;
 		root["varifycode"] = src_root["varifycode"].asString();
