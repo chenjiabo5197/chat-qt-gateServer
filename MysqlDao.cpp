@@ -198,7 +198,7 @@ bool MysqlDao::UpdatePwd(const std::string& name, const std::string& newpwd) {
 		}
 
 		// 准备查询语句
-		std::unique_ptr<sql::PreparedStatement> pstmt(con->_conn->prepareStatement("UPDATE user SET pwd = ? WHERE name = ?"));
+		std::unique_ptr<sql::PreparedStatement> pstmt(con->_conn->prepareStatement("UPDATE user SET passwd = ? WHERE name = ?"));
 
 		// 绑定参数
 		pstmt->setString(2, name);
