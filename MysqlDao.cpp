@@ -228,21 +228,20 @@ bool MysqlDao::CheckPwd(const std::string& email, const std::string& pwd, UserIn
 
 	Defer defer([this, &con]() {
 		pool_->returnConnection(std::move(con));
-		});
+	});
 
 	try {
 
-
 		// 准备SQL语句
 		std::unique_ptr<sql::PreparedStatement> pstmt(con->_conn->prepareStatement("SELECT * FROM user WHERE email = ?"));
-		pstmt->setString(1, email); // 将username替换为你要查询的用户名
+		pstmt->setString(1, email); // 将email替换为要查询的用户名
 
 		// 执行查询
 		std::unique_ptr<sql::ResultSet> res(pstmt->executeQuery());
 		std::string origin_pwd = "";
 		// 遍历结果集
 		while (res->next()) {
-			origin_pwd = res->getString("pwd");
+			origin_pwd = res->getString("passwd");
 			// 输出查询到的密码
 			std::cout << "Password: " << origin_pwd << std::endl;
 			break;
